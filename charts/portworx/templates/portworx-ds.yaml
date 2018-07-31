@@ -23,9 +23,11 @@
 {{- $etcdCert := .Values.etcd.cert | default "none" }}
 {{- $etcdKey := .Values.etcd.key | default "none" }}
 {{- $consulToken := .Values.consul.token | default "none" }}
-{{- $etcdEndPoints := .Values.etcdEndPoint }}
 {{- $misc := .Values.misc | default "" | split " " }}
+{{- $etcdEndPoints := .Values.kvdb -}}
 
+
+#{{$etcdEndPoints}}
 apiVersion: extensions/v1beta1
 kind: DaemonSet
 metadata:
@@ -82,10 +84,11 @@ spec:
               "-a", "-f",
                 {{- end -}}
               {{- else }}
-                {{- $driveNames := .drives | split ";" }}
-                {{- range $index, $name := $driveNames }}
-              "-s", "{{ $name }}",
-                {{- end -}}
+              {{ $driveNames := .drives | split ";" }}
+              {{- range $index, $name := $driveNames }}
+              "-s",
+              {{ quote $name }},
+              {{- end -}}
               {{- end -}}
 
               {{- if eq $internalKVDB true }}
@@ -96,13 +99,14 @@ spec:
               "-j", "{{ $journalDevice }}",
               {{- end -}}
 
-              {{- if empty $etcdEndPoints }}
-                {{- if eq $internalKVDB false }}
-                  "{{ required "A valid ETCD url in the format etcd:http://<your-etcd-endpoint> is required. Verify that the key is correct and there isnt any typo in specifying that, also ensure it is accessible from all node of your kubernetes cluster" .etcdEndPoint}}"
+              {{- if not (.kvdb) -}}
+                {{- if eq $internalKVDB false -}}
+                  "{{ required "A valid ETCD url in the format etcd:http://<your-etcd-endpoint> is required. Verify that the key is correct and there isnt any typo in specifying that, also ensure it is accessible from all node of your kubernetes cluster" .kvdb}}"
                 {{- end -}}
-              {{- else }}
-              "-k", "{{ regexReplaceAllLiteral "(;)" .etcdEndPoint "," }}",
-              {{ end -}}
+              {{- else -}}
+              "-k",
+              "{{ regexReplaceAllLiteral "(;)" .kvdb "," }}",
+              {{- end -}}
 
               "-c", "{{ required "Clustername cannot be empty" .clusterName }}",
 

@@ -3,6 +3,7 @@
 deploymentType: oci                     # accepts "oci" or "docker"
 imageType: none                         #
 imageVersion: 1.5.0                   # Version of the PX Image.
+kvdb:
 
 openshiftInstall: false                 # Defaults to false for installing Portworx on Openshift .
 isTargetOSCoreOS: false                 # Is your target OS CoreOS? Defaults to false.
@@ -48,4 +49,3 @@ serviceAccount:
   hook:
     create: true
     name:
-
